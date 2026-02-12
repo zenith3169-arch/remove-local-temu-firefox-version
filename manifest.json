@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Yerel Ürünleri Kaldır",
+  "version": "1.1",
+  "description": "Sayfadaki 'Yerel' ürünleri otomatik kaldırır",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
