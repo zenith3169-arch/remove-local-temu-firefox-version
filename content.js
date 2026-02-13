@@ -1,9 +1,12 @@
+// Use browser namespace for Firefox, fall back to chrome for Chrome
+const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+
 let hiddenSessionCount = 0;
 let affiliateParams = null;
 let toastElement = null;
 
 // Initialize
-chrome.storage.sync.get({ enabled: true, affiliateEnabled: false }, (data) => {
+browserAPI.storage.sync.get({ enabled: true, affiliateEnabled: false }, (data) => {
     if (data.affiliateEnabled) {
         fetchAffiliateData();
     }
@@ -16,14 +19,25 @@ chrome.storage.sync.get({ enabled: true, affiliateEnabled: false }, (data) => {
 
 // Watch for changes
 const observer = new MutationObserver(() => {
-    if (!chrome.runtime?.id) {
+    // Firefox: Check if extension context is still valid
+    try {
+        if (!browserAPI.runtime?.id) {
+            observer.disconnect();
+            return;
+        }
+    } catch (e) {
+        // Extension context lost
         observer.disconnect();
         return;
     }
 
     try {
-        chrome.storage.sync.get({ enabled: true, affiliateEnabled: false }, (data) => {
-            if (chrome.runtime.lastError) return; // Handle potential errors during get
+        browserAPI.storage.sync.get({ enabled: true, affiliateEnabled: false }, (data) => {
+            try {
+                if (browserAPI.runtime.lastError) return; // Handle potential errors during get
+            } catch (e) {
+                // Firefox may not have lastError
+            }
             if (data.enabled) removeLocalProducts();
             if (data.affiliateEnabled) {
                 if (affiliateParams) applyAffiliateLinks();
@@ -100,8 +114,8 @@ function handleDataUpdate(data) {
 }
 
 function updateTotalStats(newCount) {
-    chrome.storage.local.get({ totalHidden: 0 }, (data) => {
-        chrome.storage.local.set({ totalHidden: data.totalHidden + newCount });
+    browserAPI.storage.local.get({ totalHidden: 0 }, (data) => {
+        browserAPI.storage.local.set({ totalHidden: data.totalHidden + newCount });
     });
 }
 
@@ -160,12 +174,12 @@ function createToast() {
 let isAffiliateEnabled = false;
 
 // Sync initial state
-chrome.storage.sync.get({ affiliateEnabled: false }, (data) => {
+browserAPI.storage.sync.get({ affiliateEnabled: false }, (data) => {
     isAffiliateEnabled = data.affiliateEnabled;
 });
 
 // Listen for sync changes to update local state
-chrome.storage.onChanged.addListener((changes, area) => {
+browserAPI.storage.onChanged.addListener((changes, area) => {
     if (area === 'sync' && changes.affiliateEnabled) {
         isAffiliateEnabled = changes.affiliateEnabled.newValue;
         // Optionally update toast if visible?
@@ -193,8 +207,8 @@ function updateToggleUI(enabled) {
     const textSpan = toggleBtn.nextElementSibling?.querySelector('span:first-child');
     if (textSpan) {
         textSpan.textContent = enabled
-            ? (chrome.i18n.getMessage("statusActive") || "Active")
-            : (chrome.i18n.getMessage("toastSupport") || "Enable affiliate");
+            ? (browserAPI.i18n.getMessage("statusActive") || "Active")
+            : (browserAPI.i18n.getMessage("toastSupport") || "Enable affiliate");
         if (!enabled) textSpan.textContent += " ❤️";
     }
 }
@@ -207,10 +221,10 @@ function showToast(count) {
     let infoText = "";
 
     try {
-        removedText = chrome.i18n.getMessage("toastHiddenCount") || "Hidden on page:";
+        removedText = browserAPI.i18n.getMessage("toastHiddenCount") || "Hidden on page:";
         // Only fetch support text if needed
-        supportText = chrome.i18n.getMessage("toastSupport") || "Enable affiliate to support";
-        infoText = chrome.i18n.getMessage("affiliateInfoContent") || "By enabling this feature, you support the developer at no extra cost to you.";
+        supportText = browserAPI.i18n.getMessage("toastSupport") || "Enable affiliate to support";
+        infoText = browserAPI.i18n.getMessage("affiliateInfoContent") || "By enabling this feature, you support the developer at no extra cost to you.";
     } catch (e) {
         removedText = "Sayfada gizlenen:";
         supportText = "Destek olmak için affiliate'i açın";
@@ -302,7 +316,7 @@ function showToast(count) {
             updateToggleUI(newState);
 
             // Save state
-            chrome.storage.sync.set({ affiliateEnabled: newState });
+            browserAPI.storage.sync.set({ affiliateEnabled: newState });
 
             // If toggled ON, show thank you flow
             if (newState) {
@@ -342,8 +356,8 @@ function showThankYouToast() {
     let message = "Your support helps me keep this extension free and updated.";
 
     try {
-        title = chrome.i18n.getMessage("thankYouTitle") || title;
-        message = chrome.i18n.getMessage("thankYouMessage") || message;
+        title = browserAPI.i18n.getMessage("thankYouTitle") || title;
+        message = browserAPI.i18n.getMessage("thankYouMessage") || message;
     } catch (e) {
         // Fallback or use hardcoded if i18n fails
     }
@@ -369,20 +383,24 @@ let remoteActions = null;
 
 function fetchAffiliateData() {
     // 1. Try to get from storage directly and apply immediately (Fast)
-    chrome.storage.local.get(['affiliateData'], (result) => {
+    browserAPI.storage.local.get(['affiliateData'], (result) => {
         if (result.affiliateData) {
             handleDataUpdate(result.affiliateData);
         }
 
         // 2. ALWAYS fetch fresh data in background to ensure updates (Stale-While-Revalidate)
         // This ensures new fields like popup_html or keyword updates are picked up on next load/reload.
-        chrome.runtime.sendMessage({ action: "FETCH_AFFILIATE_DATA" }, (response) => {
-            if (response && response.success && response.data) {
-                // Save to storage. This will trigger storage.onChanged
-                // which will re-run handleDataUpdate with the fresh data.
-                chrome.storage.local.set({ affiliateData: response.data });
-            }
-        });
+        try {
+            browserAPI.runtime.sendMessage({ action: "FETCH_AFFILIATE_DATA" }, (response) => {
+                if (response && response.success && response.data) {
+                    // Save to storage. This will trigger storage.onChanged
+                    // which will re-run handleDataUpdate with the fresh data.
+                    browserAPI.storage.local.set({ affiliateData: response.data });
+                }
+            });
+        } catch (e) {
+            console.debug('Could not send message to background script:', e);
+        }
     });
 }
 
@@ -404,7 +422,7 @@ function handleDataUpdate(data) {
 }
 
 // Listen for storage changes to update dynamically
-chrome.storage.onChanged.addListener((changes, area) => {
+browserAPI.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && changes.affiliateData) {
         handleDataUpdate(changes.affiliateData.newValue);
     }

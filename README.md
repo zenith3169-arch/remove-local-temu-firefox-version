@@ -1,6 +1,6 @@
 # Yerel Satıcıları Gizle (Temu)
 
-Bu Chrome eklentisi, Temu web sitesinde gezinirken yerel satıcılar tarafından satılan ürünleri otomatik olarak gizler ve yalnızca Temu tarafından doğrudan satılan (gönderilen) ürünleri görüntüler.
+Bu Firefox eklentisi, Temu web sitesinde gezinirken yerel satıcılar tarafından satılan ürünleri otomatik olarak gizler ve yalnızca Temu tarafından doğrudan satılan (gönderilen) ürünleri görüntüler.
 
 ## Özellikler
 
@@ -9,7 +9,9 @@ Bu Chrome eklentisi, Temu web sitesinde gezinirken yerel satıcılar tarafından
 
 ## Kurulum
 
-Bu eklenti Chrome Web Mağazası'nda bulunmamaktadır. Manuel olarak yüklemek için aşağıdaki adımları izleyin:
+### Firefox'a Yükleme (Geliştirici Modu)
+
+Bu eklenti Firefox Add-ons mağazasında bulunmamaktadır. Manuel olarak yüklemek için aşağıdaki adımları izleyin:
 
 1.  **İndirme:**
     Eklentinin son sürümünü şu bağlantıdan indirin: [İndir (ZIP)](https://bit.ly/remove-local-temu)
@@ -17,20 +19,19 @@ Bu eklenti Chrome Web Mağazası'nda bulunmamaktadır. Manuel olarak yüklemek i
 2.  **Dosyaları Çıkarma:**
     İndirdiğiniz `.zip` dosyasını sağ tıklayıp "Tümünü Ayıkla" veya "Buraya Çıkart" diyerek bir klasöre çıkartın.
 
-3.  **Chrome Uzantılar Sayfasını Açma:**
-    Google Chrome tarayıcısını açın ve adres çubuğuna şunu yazıp Enter'a basın:
-    `chrome://extensions/`
+3.  **Firefox about:debugging Sayfasını Açma:**
+    Firefox tarayıcısını açın ve adres çubuğuna şunu yazıp Enter'a basın:
+    `about:debugging#/runtime/this-firefox`
 
-4.  **Geliştirici Modunu Açma:**
-    Sayfanın sağ üst köşesindeki **"Geliştirici modu" (Developer mode)** anahtarını açık konuma getirin.
+4.  **Eklentiyi Yükleme:**
+    "Geçici Eklenti Yükle" (Load Temporary Add-on) butonuna tıklayın.
 
-5.  **Eklentiyi Yükleme:**
-    Sol üstte beliren **"Paketlenmemiş öğe yükle" (Load unpacked)** butonuna tıklayın.
-
-6.  **Klasörü Seçme:**
-    2. adımda ayıkladığınız klasörü (içinde `manifest.json` dosyası olan klasörü) seçin ve "Seç" veya "Tamam" butonuna tıklayın.
+5.  **Dosya Seçme:**
+    2. adımda ayıkladığınız klasörden `manifest.json` dosyasını seçin ve "Aç" butonuna tıklayın.
 
 Tebrikler! Eklenti başarıyla yüklendi. Artık Temu'da gezinirken eklenti otomatik olarak çalışacaktır.
+
+> **Not:** Geçici eklentiler Firefox'u yeniden başlattığınızda kaldırılır. Kalıcı kurulum için eklentiyi paketlemeniz veya Firefox Developer Edition kullanmanız gerekir.
 
 ## Geliştiren
 

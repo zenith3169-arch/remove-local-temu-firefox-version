@@ -1,4 +1,7 @@
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+// Use browser namespace for Firefox, fall back to chrome for Chrome
+const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+
+browserAPI.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "FETCH_AFFILIATE_DATA") {
         fetch('https://iltekin.com/extensions/remove-local-temu/data.json')
             .then(response => {
@@ -13,8 +16,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 // ... existing fetch listener ...
 
-chrome.runtime.onInstalled.addListener((details) => {
-    if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
-        chrome.tabs.create({ url: "onboarding.html" });
+browserAPI.runtime.onInstalled.addListener((details) => {
+    // Firefox: details.reason is a string; Chrome: OnInstalledReason enum
+    if (details.reason === 'install' || details.reason === browserAPI.runtime.OnInstalledReason?.INSTALL) {
+        browserAPI.tabs.create({ url: "onboarding.html" });
     }
 });
